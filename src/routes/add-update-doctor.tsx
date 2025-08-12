@@ -115,95 +115,202 @@ export default function AddUpdateDoctorPage() {
     setAttachment(file)
   }
 
+  // const addDoctor = useMutation<{ message: string }, Error, Payload>(
+  //   async (payload) => {
+  //     try {
+  //       const formData = new FormData()
+
+  //       // Append form data
+  //       Object.entries(payload).forEach(([key, value]) => {
+  //         if (Array.isArray(value)) {
+  //           value.forEach((val) => formData.append(`${key}[]`, val)) // Append array elements properly
+  //         } else {
+  //           formData.append(key, value as string)
+  //         }
+  //         // formData.append(key, value as string)
+  //       })
+
+  //       // Append image if selected
+  //       if (attachment) {
+  //         formData.append('attachment', attachment)
+  //       }
+
+  //       console.log(formData)
+  //       const res = await privateRequest.post('admin/doctor', formData, {
+  //         headers: { 'Content-Type': 'multipart/form-data' },
+  //       })
+
+  //       return res.data
+  //     } catch (error) {
+  //       errorHandler(error)
+  //     }
+
+  //     // try {
+  //     //   const res = await privateRequest.post('admin/doctor', payload)
+  //     //   return res.data
+  //     // } catch (error) {
+  //     //   errorHandler(error)
+  //     // }
+  //   },
+  //   {
+  //     onSuccess: () => {
+  //       queryClient.invalidateQueries('doctors')
+  //       navigate(-1)
+  //     },
+  //   },
+  // )
   const addDoctor = useMutation<{ message: string }, Error, Payload>(
     async (payload) => {
       try {
-        const formData = new FormData()
+        const formData = new FormData();
 
-        // Append form data
         Object.entries(payload).forEach(([key, value]) => {
           if (Array.isArray(value)) {
-            value.forEach((val) => formData.append(`${key}[]`, val)) // Append array elements properly
+            value.forEach((val) => formData.append(`${key}[]`, val));
           } else {
-            formData.append(key, value as string)
+            formData.append(key, value as string);
           }
-          // formData.append(key, value as string)
-        })
+        });
 
-        // Append image if selected
         if (attachment) {
-          formData.append('attachment', attachment)
+          formData.append("attachment", attachment);
         }
 
-        console.log(formData)
-        const res = await privateRequest.post('admin/doctor', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+        const res = await privateRequest.post("admin/doctor", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-        return res.data
+        return res.data;
       } catch (error) {
-        errorHandler(error)
+        errorHandler(error);
+        throw error; // rethrow to let react-query catch it
       }
-
-      // try {
-      //   const res = await privateRequest.post('admin/doctor', payload)
-      //   return res.data
-      // } catch (error) {
-      //   errorHandler(error)
-      // }
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('doctors')
-        navigate(-1)
+        queryClient.invalidateQueries("doctors");
+        navigate(-1);
       },
-    },
-  )
+    }
+  );
+
   const updateDoctor = useMutation<{ message: string }, Error, DoctorUpdatePayload>(
     async (payload) => {
       try {
-        const formData = new FormData()
+        const formData = new FormData();
 
-        // Append form data
         Object.entries(payload).forEach(([key, value]) => {
           if (Array.isArray(value)) {
-            value.forEach((val) => formData.append(`${key}[]`, val)) // Append array elements properly
+            value.forEach((val) => formData.append(`${key}[]`, val));
           } else {
-            formData.append(key, value as string)
+            formData.append(key, value as string);
           }
-          // formData.append(key, value as string)
-        })
+        });
 
-        // Append image if selected
         if (attachment) {
-          formData.append('attachment', attachment)
+          formData.append("attachment", attachment);
         }
 
-        console.log(formData)
-        const res = await privateRequest.patch('admin/doctor', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+        const res = await privateRequest.patch("admin/doctor", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-        return res.data
+        return res.data;
       } catch (error) {
-        errorHandler(error)
+        errorHandler(error);
+        throw error;
       }
-
-      // try {
-      //   const res = await privateRequest.patch(`admin/doctor`, payload)
-      //   return res.data
-      // } catch (error) {
-      //   errorHandler(error)
-      // }
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('doctors')
-        queryClient.invalidateQueries('doctor-details')
-        navigate(-1)
+        queryClient.invalidateQueries("doctors");
+        queryClient.invalidateQueries("doctor-details");
+        navigate(-1);
       },
-    },
-  )
+    }
+  );
+
+  const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // Extract only the values (ObjectId strings) from specialty and hospital arrays
+    const specialtyIds = Array.isArray(form.specialty)
+      ? form.specialty.map((spec) => spec.value)
+      : [];
+
+    const hospitalIds = Array.isArray(form.hospital)
+      ? form.hospital.map((hosp) => hosp.value)
+      : [];
+
+    const payload: Payload = {
+      dialCode: "+880",
+      specialty: specialtyIds,
+      hospital: hospitalIds,
+      gender: form.gender?.value ?? "",
+      name: form.name,
+      phone: form.phone,
+      about: form.about,
+      bmdcCode: form.bmdcCode,
+      experienceInYear: form.experienceInYear,
+      consultationFee: form.consultationFee,
+      consultationFeeUsd: form.consultationFeeUsd,
+      followupFee: form.followupFee,
+      photo: form.photo,
+    };
+
+    // Validation checks
+    if (
+      !form.name ||
+      !form.phone ||
+      specialtyIds.length === 0 ||
+      hospitalIds.length === 0 ||
+      !form.about ||
+      !form.bmdcCode ||
+      !form.experienceInYear ||
+      !form.consultationFee ||
+      !form.consultationFeeUsd ||
+      !form.followupFee ||
+      !form.gender?.value
+    ) {
+      setErrors({
+        name: !form.name ? "Name is required" : "",
+        phone: !form.phone ? "Phone is required" : "",
+        specialty: specialtyIds.length === 0 ? "Specialty is required" : "",
+        hospital: hospitalIds.length === 0 ? "Hospital is required" : "",
+        about: !form.about ? "About is required" : "",
+        bmdcCode: !form.bmdcCode ? "BMDC Code is required" : "",
+        experienceInYear: !form.experienceInYear ? "Experience is required" : "",
+        consultationFee: !form.consultationFee ? "Consultation Fee is required" : "",
+        consultationFeeUsd: !form.consultationFeeUsd ? "Consultation Fee Usd is required" : "",
+        followupFee: !form.followupFee ? "Followup Fee is required" : "",
+        gender: !form.gender?.value ? "Gender is required" : "",
+      });
+      return;
+    }
+
+    if (form.phone.length < 10) {
+      setErrors((prev) => ({
+        ...prev,
+        phone: "Phone number must be 10 digits",
+      }));
+      return;
+    }
+
+    if (id) {
+      toast.promise(updateDoctor.mutateAsync({ ...payload, id }), {
+        loading: "Updating doctor...",
+        success: (res) => res.message ?? "Doctor updated successfully",
+        error: (err) => err.message ?? "Something went wrong!",
+      });
+    } else {
+      toast.promise(addDoctor.mutateAsync(payload), {
+        loading: "Adding doctor...",
+        success: (res) => res.message ?? "Doctor added successfully",
+        error: (err) => err.message ?? "Something went wrong!",
+      });
+    }
+  };
+
 
   const { data: specialist, isLoading: specialistLoading } = useQuery<Option[], Error>(
     'hospitalsOptions',
@@ -228,14 +335,14 @@ export default function AddUpdateDoctorPage() {
     const specialtyArray = Array.isArray(data?.specialty)
       ? data.specialty
       : data?.specialty
-      ? [data.specialty]
-      : []
+        ? [data.specialty]
+        : []
 
     const hospitalArray = Array.isArray(data?.hospital)
       ? data.hospital
       : data?.hospital
-      ? [data.hospital]
-      : []
+        ? [data.hospital]
+        : []
 
     setForm((prev) => ({
       ...prev,
@@ -306,84 +413,84 @@ export default function AddUpdateDoctorPage() {
     }))
   }
 
-  const submitHandler = (e: _FormSubmitEvent) => {
-    e.preventDefault()
+  // const submitHandler = (e: _FormSubmitEvent) => {
+  //   e.preventDefault()
 
-    const payload: Payload = {
-      dialCode: '+880',
-      specialty: Array.isArray(form.specialty)
-        ? form.specialty.map((spec) => spec.value) // Extract values from the array
-        : [], // Ensure it's always an array
-      hospital: Array.isArray(form.hospital)
-        ? form.hospital.map((spec) => spec.value) // Extract values from the array
-        : [], // Ensure it's always an array
-      gender: form.gender?.value ?? '',
-      name: form.name,
-      phone: form.phone,
-      about: form.about,
-      bmdcCode: form.bmdcCode,
-      experienceInYear: form.experienceInYear,
-      consultationFee: form.consultationFee,
-      consultationFeeUsd: form.consultationFeeUsd,
-      followupFee: form.followupFee,
-      photo: form.photo,
-    }
+  //   const payload: Payload = {
+  //     dialCode: '+880',
+  //     specialty: Array.isArray(form.specialty)
+  //       ? form.specialty.map((spec) => spec.value) // Extract values from the array
+  //       : [], // Ensure it's always an array
+  //     hospital: Array.isArray(form.hospital)
+  //       ? form.hospital.map((spec) => spec.value) // Extract values from the array
+  //       : [], // Ensure it's always an array
+  //     gender: form.gender?.value ?? '',
+  //     name: form.name,
+  //     phone: form.phone,
+  //     about: form.about,
+  //     bmdcCode: form.bmdcCode,
+  //     experienceInYear: form.experienceInYear,
+  //     consultationFee: form.consultationFee,
+  //     consultationFeeUsd: form.consultationFeeUsd,
+  //     followupFee: form.followupFee,
+  //     photo: form.photo,
+  //   }
 
-    console.log(payload)
-    console.log('**')
+  //   console.log(payload)
+  //   console.log('**')
 
-    if (
-      !form.name ||
-      !form.phone ||
-      !form.specialty?.length ||
-      !form.hospital?.length ||
-      !form.about ||
-      !form.bmdcCode ||
-      !form.experienceInYear ||
-      !form.consultationFee ||
-      !form.consultationFeeUsd ||
-      !form.followupFee ||
-      !form.gender
-    ) {
-      setErrors((prev) => ({
-        ...prev,
-        name: !form.name ? 'Name is required' : '',
-        phone: !form.phone ? 'Phone is required' : '',
-        specialty: !form.specialty?.length ? 'Specialty is required' : '',
-        hospital: !form.hospital?.length ? 'Hospital is required' : '',
-        about: !form.about ? 'About is required' : '',
-        bmdcCode: !form.bmdcCode ? 'BMDC Code is required' : '',
-        experienceInYear: !form.experienceInYear ? 'Experience is required' : '',
-        consultationFee: !form.consultationFee ? 'Consultation Fee is required' : '',
-        consultationFeeUsd: !form.consultationFeeUsd ? 'Consultation Fee Usd is required' : '',
-        followupFee: !form.followupFee ? 'Followup Fee is required' : '',
-        gender: !form.gender?.value ? 'Gender is required' : '',
-      }))
-      return
-    }
+  //   if (
+  //     !form.name ||
+  //     !form.phone ||
+  //     !form.specialty?.length ||
+  //     !form.hospital?.length ||
+  //     !form.about ||
+  //     !form.bmdcCode ||
+  //     !form.experienceInYear ||
+  //     !form.consultationFee ||
+  //     !form.consultationFeeUsd ||
+  //     !form.followupFee ||
+  //     !form.gender
+  //   ) {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       name: !form.name ? 'Name is required' : '',
+  //       phone: !form.phone ? 'Phone is required' : '',
+  //       specialty: !form.specialty?.length ? 'Specialty is required' : '',
+  //       hospital: !form.hospital?.length ? 'Hospital is required' : '',
+  //       about: !form.about ? 'About is required' : '',
+  //       bmdcCode: !form.bmdcCode ? 'BMDC Code is required' : '',
+  //       experienceInYear: !form.experienceInYear ? 'Experience is required' : '',
+  //       consultationFee: !form.consultationFee ? 'Consultation Fee is required' : '',
+  //       consultationFeeUsd: !form.consultationFeeUsd ? 'Consultation Fee Usd is required' : '',
+  //       followupFee: !form.followupFee ? 'Followup Fee is required' : '',
+  //       gender: !form.gender?.value ? 'Gender is required' : '',
+  //     }))
+  //     return
+  //   }
 
-    if (form.phone.length < 10) {
-      setErrors((prev) => ({
-        ...prev,
-        phone: 'Phone number must be 10 digits',
-      }))
-      return
-    }
+  //   if (form.phone.length < 10) {
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       phone: 'Phone number must be 10 digits',
+  //     }))
+  //     return
+  //   }
 
-    if (id) {
-      toast.promise(updateDoctor.mutateAsync({ ...payload, id }), {
-        loading: 'Updating doctor...',
-        success: (res) => res.message ?? 'Doctor updated successfully',
-        error: (err) => err.message ?? 'Something went wrong!',
-      })
-    } else {
-      toast.promise(addDoctor.mutateAsync(payload), {
-        loading: 'Adding doctor...',
-        success: (res) => res.message ?? 'Doctor added successfully',
-        error: (err) => err.message ?? 'Something went wrong!',
-      })
-    }
-  }
+  //   if (id) {
+  //     toast.promise(updateDoctor.mutateAsync({ ...payload, id }), {
+  //       loading: 'Updating doctor...',
+  //       success: (res) => res.message ?? 'Doctor updated successfully',
+  //       error: (err) => err.message ?? 'Something went wrong!',
+  //     })
+  //   } else {
+  //     toast.promise(addDoctor.mutateAsync(payload), {
+  //       loading: 'Adding doctor...',
+  //       success: (res) => res.message ?? 'Doctor added successfully',
+  //       error: (err) => err.message ?? 'Something went wrong!',
+  //     })
+  //   }
+  // }
 
   return (
     <div className='card'>
